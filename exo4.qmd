@@ -1,0 +1,160 @@
+---
+title: "Exo4"
+format: html
+editor: visual
+editor_options: NORO
+ 
+---
+ 
+# Loading data
+```{r}
+f <- "C:/Users/nurum/Downloads/google-10000-english-usa-no-swears.txt"
+
+g <- "C:/Users/nurum/Downloads/collins-scrabble-words-2019.txt"
+
+read.csv(f, col.names = TRUE) 
+read.csv(g, col.names = TRUE) 
+library(tidyverse)
+```
+
+# Step 1
+
+```{r}
+load_dictionary <- function(filename) { 
+  dico <- readLines(filename)
+  return(dico)
+}
+
+valid_list <- load_dictionary("C:/Users/nurum/Downloads/google-10000-english-usa-no-swears.txt")
+
+solution_list <- load_dictionary("C:/Users/nurum/Downloads/collins-scrabble-words-2019.txt")
+
+
+valid_list <- setdiff(valid_list, "words") #I accidentally add word in the list and this is the only way I know to take it out of the list
+solution_list <- setdiff(solution_list, "words")
+
+
+str(valid_list)
+str(solution_list)
+```
+
+# Sptep 2
+
+```{r}
+solution_list <- intersect(solution_list,valid_list) 
+length(solution_list)
+```
+
+# Step 3
+
+```{r}
+pick_solution <- function(solution_list){ 
+  removed <- solution_list[nchar(solution_list) == 5] 
+  choose <-sample(removed, 1) 
+  split <-strsplit(choose, "") [[1]] 
+  return(split) }
+
+solution <- pick_solution(solution_list)
+print(solution)
+```
+
+# Step 4
+
+```{r}
+#Just the first step
+
+play_wordle <- function(solution, valid_list, num_guesses = 6) {
+  cat("Chance to guess a word of length", length(solution), "\n")
+  
+  letters_left <- setdiff(LETTERS, unique(unlist(strsplit(valid_list, ""))))
+  cat("Letters left:", paste(letters_left, collapse = " "), "\n")
+  
+  for (i in 1:num_guesses) {
+    cat("Enter guess number", i, ": ")
+    guess <- toupper(readline())
+    
+    if (!(toupper(guess) %in% valid_list) || nchar(guess) != length(solution)) {
+      cat("Invalid guess. Enter a valid word of length", length(solution), "from the provided list.\n")
+      
+    } else if (toupper(guess) != paste(toupper(solution), collapse = "")) {
+      cat("Wrong guess. Try again.\n")
+      
+    } else {
+      cat("Congratulations! You guessed the word '", guess, "' correctly! YOU WON \n")
+      
+      
+      return()
+    }
+  }
+  
+  cat("Gosh, wrong again. The correct word was", paste(solution, collapse = ""), "YOU LOST Try hard next time!\n")
+}
+
+play_wordle(solution, valid_list,  num_guesses = 6)
+```
+
+# Final results
+
+```{r}
+#combined
+
+solution <- pick_solution(solution_list)
+print(solution)
+
+play_wordle <- function(solution, valid_list, num_guesses = 6) {
+  cat("WELCOME TO THE WORDLE GAME!\n")
+  remaining_letters <- LETTERS
+  
+  evaluate_guess <- function(guess, solution) {
+    feedback <- character(length(guess))
+    if (toupper(guess) == paste(solution, collapse = "")) {
+      return("Correct")
+    } else {
+      for (i in seq_along(guess)) {
+        if (toupper(guess[i]) == solution[i]) {
+          feedback[i] <- "*"
+        } else if (toupper(guess[i]) %in% solution) {
+          feedback[i] <- "+"
+        } else {
+          feedback[i] <- "-"
+        }
+      }
+    }
+    return(feedback)
+  }
+  
+  for (i in 1:num_guesses) {
+    cat("Enter guess number", i, ": ")
+    guess <- toupper(readline())
+    result <- evaluate_guess(guess, solution)
+    print(result)
+    
+    
+    if (result == "Correct") {
+      cat(guess, " - Correct! CONGRATULATIONS! YOU WON!\n")
+      return()
+    }
+    
+     if (length(guess) == length(solution) && !identical(result, rep("*", length(solution)))) {
+      remaining_letters <- setdiff(remaining_letters, unique(strsplit(guess, "")[[1]]))
+    }
+    
+   
+    if (length(guess) == length(solution)) {
+      cat(paste(result, collapse = " "), "\n")
+    } else {
+      cat(guess, " - Please enter a word of length", length(solution), "\n")
+    }
+    
+    
+    remaining_letters <- setdiff(remaining_letters, unique(strsplit(guess, "")[[1]]))
+    cat("Letters not yet guessed:", paste(remaining_letters, collapse = " "), "\n")
+  }
+  
+  cat("SORRY, wrong again. The correct word was", paste(solution, collapse = ""), "YOU LOST! Try hard next time!\n")
+}
+
+play_wordle(solution)
+
+```
+ 
